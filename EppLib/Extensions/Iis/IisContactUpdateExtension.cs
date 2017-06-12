@@ -23,9 +23,9 @@ namespace EppLib.Extensions.Iis
 
         public override XmlNode ToXml(XmlDocument doc)
         {
-            var root = CreateElement(doc, "iis:create");
+            var root = CreateElement(doc, "iis:update");
 
-            if (!String.IsNullOrWhiteSpace(VatNumber))
+            if (VatNumber!=null)
             {
                 AddXmlElement(doc, root, "iis:vatno", VatNumber);
             }

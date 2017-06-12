@@ -21,6 +21,7 @@ namespace EppLib.Entities
     {
         protected readonly string nspace;
         protected readonly string namespaceUri;
+        protected readonly string schemaLocation;
 
         /// <summary>
         /// Length is 6 - 16, ascii chars
@@ -30,10 +31,11 @@ namespace EppLib.Entities
 
         public readonly IList<EppExtension> Extensions = new List<EppExtension>();
 
-        protected EppCommand(string nspace, string namespaceUri)
+        protected EppCommand(string nspace, string namespaceUri, string schemaLocation)
         {
             this.nspace = nspace;
             this.namespaceUri = namespaceUri;
+            this.schemaLocation = schemaLocation;
         }
 
         protected EppCommand()
@@ -58,14 +60,21 @@ namespace EppLib.Entities
         {
             if (!String.IsNullOrWhiteSpace(Password))
             {
-                var authInfo = AddXmlElement(doc, cmdElement, nspace + ":authInfo", null, namespaceUri);
-                AddXmlElement(doc, authInfo, nspace + ":pw", Password, namespaceUri);
+                // We may have had to insert the authInfo tag in this namespace already, in which case don't insert it again
+                if (doc.GetElementsByTagName(nspace + ":authInfo").Count == 0)
+                {
+                    var authInfo = AddXmlElement(doc, cmdElement, nspace + ":authInfo", null, namespaceUri);
+                    AddXmlElement(doc, authInfo, nspace + ":pw", Password, namespaceUri);
+                }
             }
         }
 
         private void SetCommonAttributes(XmlElement command)
         {
             command.SetAttribute("xmlns:" + nspace, namespaceUri);
+            var xsd = command.OwnerDocument.CreateAttribute("xsi", "schemaLocation", "http://www.w3.org/2001/XMLSchema-instance");
+            xsd.Value = schemaLocation;
+            command.Attributes.Append(xsd);
         }
 
         protected XmlElement BuildCommandElement(XmlDocument doc, string qualifiedName, XmlElement commandRootElement, string query = null)
